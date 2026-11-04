@@ -1,3 +1,4 @@
+
 package id.deathrealm;
 
 import org.bukkit.entity.Player;
@@ -15,6 +16,10 @@ public class DeathRealmProtection implements Listener {
 
     @EventHandler
     public void onPlayerTeleport(PlayerTeleportEvent event) {
+        if (event.getTo() == null || event.getTo().getWorld() == null) {
+            return;
+        }
+
         Player player = event.getPlayer();
 
         boolean enteringDeathRealm =
@@ -24,16 +29,15 @@ public class DeathRealmProtection implements Listener {
                 event.getFrom().getWorld().equals(plugin.getDeathWorld())
                 && !enteringDeathRealm;
 
-        // Pemain hidup tidak boleh masuk DeathRealm
-        if (enteringDeathRealm
-                && !plugin.getTimerManager().hasTimer(player.getUniqueId())) {
+        boolean hasTimer =
+                plugin.getTimerManager().hasTimer(player.getUniqueId());
+
+        if (enteringDeathRealm && !hasTimer) {
             event.setCancelled(true);
             return;
         }
 
-        // Pemain yang masih memiliki waktu hukuman tidak boleh keluar
-        if (leavingDeathRealm
-                && plugin.getTimerManager().getRemainingTime(player.getUniqueId()) > 0) {
+        if (leavingDeathRealm && hasTimer) {
             event.setCancelled(true);
         }
     }
