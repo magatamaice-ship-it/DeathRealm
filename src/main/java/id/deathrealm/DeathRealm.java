@@ -19,6 +19,9 @@ public class DeathRealm extends JavaPlugin {
         createDeathWorld();
 
         timerManager = new DeathTimerManager(this);
+        for (org.bukkit.entity.Player player : Bukkit.getOnlinePlayers()) {
+    timerManager.resumeTimer(player);
+        }
         
         getServer().getPluginManager().registerEvents(
     new DeathRealmFlight(this), this
