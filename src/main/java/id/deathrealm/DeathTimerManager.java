@@ -1,4 +1,3 @@
-
 package id.deathrealm;
 
 import org.bukkit.Bukkit;
@@ -104,14 +103,11 @@ public class DeathTimerManager {
             return;
         }
 
-        World mainWorld = Bukkit.getWorlds().stream()
-                .filter(world -> !world.equals(plugin.getDeathWorld()))
-                .findFirst()
-                .orElse(null);
+        World mainWorld = Bukkit.getWorld("world");
 
         if (mainWorld == null) {
             plugin.getLogger().severe(
-                    "Tidak dapat menemukan dunia utama untuk kebangkitan!"
+                    "Dunia utama 'world' tidak ditemukan!"
             );
             return;
         }
