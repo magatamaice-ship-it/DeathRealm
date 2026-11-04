@@ -63,32 +63,53 @@ public class DeathTimerManager {
     }
 
     private void startCountdown(Player player) {
-    UUID uuid = player.getUniqueId();
+        UUID uuid = player.getUniqueId();
 
-    if (tasks.containsKey(uuid)) {
-        return;
-    }
-
-    final BukkitTask[] taskRef = new BukkitTask[1];
-
-    taskRef[0] = Bukkit.getScheduler().runTaskTimer(plugin, () -> {
-
-        if (!player.isOnline()) {
-            taskRef[0].cancel();
-            tasks.remove(uuid);
+        if (tasks.containsKey(uuid)) {
             return;
         }
 
-        if (getRemainingTime(uuid) <= 0) {
-            World mainWorld = Bukkit.getWorlds().get(0);
+        final BukkitTask[] taskRef = new BukkitTask[1];
 
-            player.teleport(mainWorld.getSpawnLocation());
-            removeTimer(uuid);
+        taskRef[0] = Bukkit.getScheduler().runTaskTimer(plugin, () -> {
 
-            taskRef[0].cancel();
-        }
+            if (!player.isOnline()) {
+                taskRef[0].cancel();
+                tasks.remove(uuid);
+                return;
+            }
 
-    }, 20L, 20L);
+            if (getRemainingTime(uuid) <= 0) {
+                World mainWorld = Bukkit.getWorlds().get(0);
 
-    tasks.put(uuid, taskRef[0]);
+                player.teleport(mainWorld.getSpawnLocation());
+                removeTimer(uuid);
+
+                taskRef[0].cancel();
+            }
+
+        }, 20L, 20L);
+
+        tasks.put(uuid, taskRef[0]);
     }
+
+    public void removeTimer(UUID uuid) {
+        data.set(uuid.toString(), null);
+        save();
+
+        BukkitTask task = tasks.remove(uuid);
+
+        if (task != null) {
+            task.cancel();
+        }
+    }
+
+    private void save() {
+        try {
+            data.save(file);
+        } catch (IOException exception) {
+            plugin.getLogger().severe("Gagal menyimpan timer!");
+            exception.printStackTrace();
+        }
+    }
+}
