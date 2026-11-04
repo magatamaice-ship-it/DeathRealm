@@ -13,10 +13,10 @@ public class DeathRealm extends JavaPlugin {
     private World deathWorld;
     private DeathTimerManager timerManager;
     private DeathRealmAmbient ambient;
+    private DeathRealmVisibility visibility;
 
     @Override
     public void onEnable() {
-
         getLogger().info("Starting DeathRealm...");
 
         WorldCreator creator = new WorldCreator("DeathRealm");
@@ -40,20 +40,16 @@ public class DeathRealm extends JavaPlugin {
 
         timerManager = new DeathTimerManager(this);
 
+        visibility = new DeathRealmVisibility(this);
+
         getServer().getPluginManager().registerEvents(
                 new DeathRealmDeathListener(this), this);
-
         getServer().getPluginManager().registerEvents(
                 new DeathRealmFlight(this), this);
-
         getServer().getPluginManager().registerEvents(
                 new DeathRealmProtection(this), this);
-
         getServer().getPluginManager().registerEvents(
                 new DeathRealmEnvironment(this), this);
-
-        DeathRealmVisibility visibility = new DeathRealmVisibility(this);
-
         getServer().getPluginManager().registerEvents(
                 visibility, this);
 
@@ -63,6 +59,13 @@ public class DeathRealm extends JavaPlugin {
         Bukkit.getScheduler().runTask(this, visibility::updateVisibility);
 
         getLogger().info("DeathRealm successfully enabled!");
+    }
+
+    public void updateVisibility() {
+        if (visibility != null) {
+            Bukkit.getScheduler().runTask(
+                    this, visibility::updateVisibility);
+        }
     }
 
     @Override
