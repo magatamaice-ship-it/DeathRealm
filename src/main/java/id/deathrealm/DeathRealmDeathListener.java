@@ -22,6 +22,8 @@ public class DeathRealmDeathListener implements Listener {
         // Item dan XP tetap mengikuti sistem Minecraft biasa
         event.setKeepInventory(false);
         event.setKeepLevel(false);
+        
+        plugin.getTimerManager().startTimer(player);
     }
 
     @EventHandler
