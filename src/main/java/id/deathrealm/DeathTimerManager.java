@@ -2,6 +2,8 @@
 package id.deathrealm;
 
 import org.bukkit.Bukkit;
+import org.bukkit.Particle;
+import org.bukkit.Sound;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitTask;
@@ -35,9 +37,11 @@ public class DeathTimerManager {
     }
 
     public void startTimer(Player player) {
+        UUID uuid = player.getUniqueId();
+
         long endTime = System.currentTimeMillis() + DEATH_TIME;
 
-        data.set(player.getUniqueId().toString(), endTime);
+        data.set(uuid.toString(), endTime);
         save();
 
         startCountdown(player);
@@ -70,35 +74,54 @@ public class DeathTimerManager {
             return;
         }
 
-        final BukkitTask[] taskRef = new BukkitTask[1];
+        BukkitTask task = Bukkit.getScheduler().runTaskTimer(
+                plugin,
+                () -> {
+                    if (!player.isOnline()) {
+                        BukkitTask current = tasks.remove(uuid);
+                        if (current != null) {
+                            current.cancel();
+                        }
+                        return;
+                    }
 
-        taskRef[0] = Bukkit.getScheduler().runTaskTimer(plugin, () -> {
+                    if (getRemainingTime(uuid) <= 0) {
+                        resurrect(player);
+                    }
+                },
+                20L,
+                20L
+        );
 
-            if (!player.isOnline()) {
-                taskRef[0].cancel();
-                tasks.remove(uuid);
-                return;
-            }
-
-            if (getRemainingTime(uuid) <= 0) {
-                resurrect(player);
-                taskRef[0].cancel();
-            }
-
-        }, 20L, 20L);
-
-        tasks.put(uuid, taskRef[0]);
+        tasks.put(uuid, task);
     }
 
     public void resurrect(Player player) {
-        removeTimer(player.getUniqueId());
+        UUID uuid = player.getUniqueId();
 
-        World mainWorld = Bukkit.getWorlds().get(0);
+        if (!hasTimer(uuid)) {
+            return;
+        }
+
+        World mainWorld = Bukkit.getWorlds().stream()
+                .filter(world -> !world.equals(plugin.getDeathWorld()))
+                .findFirst()
+                .orElse(null);
+
+        if (mainWorld == null) {
+            plugin.getLogger().severe(
+                    "Tidak dapat menemukan dunia utama untuk kebangkitan!"
+            );
+            return;
+        }
+
+        removeTimer(uuid);
+
         player.teleport(mainWorld.getSpawnLocation());
 
         player.getWorld().spawnParticle(
-                org.bukkit.Particle.TOTEM_OF_UNDYING,
-                player.getLocation().add(0, 1, 0),
+                Particle.TOTEM_OF_UNDYING,
+                player.getLocation().clone().add(0, 1, 0),
                 60,
                 0.5, 1.0, 0.5,
                 0.1
@@ -106,7 +129,7 @@ public class DeathTimerManager {
 
         player.getWorld().playSound(
                 player.getLocation(),
-                org.bukkit.Sound.ITEM_TOTEM_USE,
+                Sound.ITEM_TOTEM_USE,
                 1.0f,
                 1.0f
         );
