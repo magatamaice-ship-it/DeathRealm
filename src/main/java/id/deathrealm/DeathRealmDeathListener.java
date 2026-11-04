@@ -28,7 +28,36 @@ public class DeathRealmDeathListener implements Listener {
         event.setKeepInventory(false);
         event.setKeepLevel(false);
         
-        plugin.getTimerManager().startTimer(player);
+        plugin.getTimerManager().startTimer(player);Location location = player.getLocation();
+
+new BukkitRunnable() {
+    int count = 0;
+
+    @Override
+    public void run() {
+        if (count >= 20) {
+            cancel();
+            return;
+        }
+
+        location.getWorld().spawnParticle(
+                Particle.SOUL,
+                location.clone().add(0, count * 0.15, 0),
+                8,
+                0.3, 0.3, 0.3,
+                0.02
+        );
+
+        count++;
+    }
+}.runTaskTimer(plugin, 0L, 2L);
+
+player.getWorld().playSound(
+        location,
+        Sound.ENTITY_ALLAY_DEATH,
+        1.0f,
+        0.7f
+);
     }
 
     @EventHandler
