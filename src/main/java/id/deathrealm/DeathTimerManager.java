@@ -1,10 +1,15 @@
 package id.deathrealm;
 
-import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.Bukkit;
+import org.bukkit.World;
 import org.bukkit.entity.Player;
+import org.bukkit.scheduler.BukkitTask;
+import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 public class DeathTimerManager {
@@ -12,6 +17,8 @@ public class DeathTimerManager {
     private final DeathRealm plugin;
     private final File file;
     private final YamlConfiguration data;
+
+    private final Map<UUID, BukkitTask> tasks = new HashMap<>();
 
     private static final long DEATH_TIME = 60 * 60 * 1000L;
 
@@ -31,6 +38,8 @@ public class DeathTimerManager {
 
         data.set(player.getUniqueId().toString(), endTime);
         save();
+
+        startCountdown(player);
     }
 
     public long getRemainingTime(UUID uuid) {
@@ -47,9 +56,51 @@ public class DeathTimerManager {
         return data.contains(uuid.toString());
     }
 
+    public void resumeTimer(Player player) {
+        if (hasTimer(player.getUniqueId())) {
+            startCountdown(player);
+        }
+    }
+
+    private void startCountdown(Player player) {
+        UUID uuid = player.getUniqueId();
+
+        if (tasks.containsKey(uuid)) {
+            return;
+        }
+
+        BukkitTask task = Bukkit.getScheduler().runTaskTimer(plugin, () -> {
+
+            if (getRemainingTime(uuid) <= 0) {
+                if (player.isOnline()) {
+                    World mainWorld = Bukkit.getWorlds().get(0);
+
+                    player.teleport(mainWorld.getSpawnLocation());
+                    removeTimer(uuid);
+                }
+
+                tasks.remove(uuid);
+                return;
+            }
+
+            if (!player.isOnline()) {
+                tasks.remove(uuid);
+            }
+
+        }, 20L, 20L);
+
+        tasks.put(uuid, task);
+    }
+
     public void removeTimer(UUID uuid) {
         data.set(uuid.toString(), null);
         save();
+
+        BukkitTask task = tasks.remove(uuid);
+
+        if (task != null) {
+            task.cancel();
+        }
     }
 
     private void save() {
