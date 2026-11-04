@@ -19,17 +19,20 @@ public class DeathRealmVisibility implements Listener {
 
     @EventHandler
     public void onJoin(PlayerJoinEvent event) {
-        Bukkit.getScheduler().runTaskLater(plugin, this::updateVisibility, 2L);
+        Bukkit.getScheduler().runTaskLater(
+                plugin, this::updateVisibility, 2L);
     }
 
     @EventHandler
     public void onWorldChange(PlayerChangedWorldEvent event) {
-        Bukkit.getScheduler().runTask(plugin, this::updateVisibility);
+        Bukkit.getScheduler().runTask(
+                plugin, this::updateVisibility);
     }
 
     @EventHandler
     public void onQuit(PlayerQuitEvent event) {
-        Bukkit.getScheduler().runTask(plugin, this::updateVisibility);
+        Bukkit.getScheduler().runTask(
+                plugin, this::updateVisibility);
     }
 
     public void updateVisibility() {
@@ -40,11 +43,8 @@ public class DeathRealmVisibility implements Listener {
                     continue;
                 }
 
-                boolean viewerDead =
-                        plugin.getTimerManager().hasTimer(viewer.getUniqueId());
-
-                boolean targetDead =
-                        plugin.getTimerManager().hasTimer(target.getUniqueId());
+                boolean viewerDead = isDead(viewer);
+                boolean targetDead = isDead(target);
 
                 if (viewerDead != targetDead) {
                     viewer.hidePlayer(plugin, target);
@@ -53,5 +53,9 @@ public class DeathRealmVisibility implements Listener {
                 }
             }
         }
+    }
+
+    private boolean isDead(Player player) {
+        return plugin.getTimerManager().hasTimer(player.getUniqueId());
     }
 }
