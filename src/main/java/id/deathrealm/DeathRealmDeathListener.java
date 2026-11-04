@@ -1,16 +1,17 @@
+
 package id.deathrealm;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
-import org.bukkit.scheduler.BukkitRunnable;
-import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.PlayerDeathEvent;
-import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerRespawnEvent;
+import org.bukkit.scheduler.BukkitRunnable;
 
 public class DeathRealmDeathListener implements Listener {
 
@@ -24,67 +25,82 @@ public class DeathRealmDeathListener implements Listener {
     public void onPlayerDeath(PlayerDeathEvent event) {
         Player player = event.getEntity();
 
-        // Item dan XP tetap mengikuti sistem Minecraft biasa
+        // Item dan XP tetap jatuh seperti kematian normal.
         event.setKeepInventory(false);
         event.setKeepLevel(false);
-        
-        plugin.getTimerManager().startTimer(player);Location location = player.getLocation();
 
-new BukkitRunnable() {
-    int count = 0;
+        // Mulai timer 60 menit.
+        plugin.getTimerManager().startTimer(player);
 
-    @Override
-    public void run() {
-        if (count >= 20) {
-            cancel();
-            return;
-        }
+        // Efek jiwa saat pemain mati.
+        Location location = player.getLocation().clone();
 
-        location.getWorld().spawnParticle(
-                Particle.SOUL,
-                location.clone().add(0, count * 0.15, 0),
-                8,
-                0.3, 0.3, 0.3,
-                0.02
+        player.getWorld().playSound(
+                location,
+                Sound.ENTITY_ALLAY_DEATH,
+                1.0f,
+                0.7f
         );
 
-        count++;
-    }
-}.runTaskTimer(plugin, 0L, 2L);
+        new BukkitRunnable() {
+            int count = 0;
 
-player.getWorld().playSound(
-        location,
-        Sound.ENTITY_ALLAY_DEATH,
-        1.0f,
-        0.7f
-);
+            @Override
+            public void run() {
+                if (count >= 10) {
+                    cancel();
+                    return;
+                }
+
+                location.getWorld().spawnParticle(
+                        Particle.SOUL,
+                        location.clone().add(0, count * 0.25, 0),
+                        12,
+                        0.3, 0.2, 0.3,
+                        0.02
+                );
+
+                count++;
+            }
+        }.runTaskTimer(plugin, 0L, 2L);
     }
 
     @EventHandler
     public void onPlayerRespawn(PlayerRespawnEvent event) {
         Player player = event.getPlayer();
 
-        Bukkit.getScheduler().runTask(plugin, () -> {
-            if (plugin.getDeathWorld() != null) {
+        event.setRespawnLocation(plugin.getDeathWorld().getSpawnLocation());
+
+        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+            if (player.isOnline()
+                    && plugin.getTimerManager().hasTimer(player.getUniqueId())) {
                 player.teleport(plugin.getDeathWorld().getSpawnLocation());
+                plugin.getTimerManager().resumeTimer(player);
             }
-        });
-    }
-@EventHandler
-public void onPlayerJoin(PlayerJoinEvent event) {
-    Player player = event.getPlayer();
-
-    if (!plugin.getTimerManager().hasTimer(player.getUniqueId())) {
-        return;
+        }, 1L);
     }
 
-    if (plugin.getTimerManager().getRemainingTime(player.getUniqueId()) <= 0) {
-        plugin.getTimerManager().removeTimer(player.getUniqueId());
-        player.teleport(org.bukkit.Bukkit.getWorlds().get(0).getSpawnLocation());
-        return;
-    }
+    @EventHandler
+    public void onPlayerJoin(PlayerJoinEvent event) {
+        Player player = event.getPlayer();
 
-    player.teleport(plugin.getDeathWorld().getSpawnLocation());
-    plugin.getTimerManager().resumeTimer(player);
-}
+        if (!plugin.getTimerManager().hasTimer(player.getUniqueId())) {
+            return;
+        }
+
+        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+            if (!player.isOnline()) {
+                return;
+            }
+
+            if (plugin.getTimerManager().getRemainingTime(
+                    player.getUniqueId()) <= 0) {
+                plugin.getTimerManager().resurrect(player);
+                return;
+            }
+
+            player.teleport(plugin.getDeathWorld().getSpawnLocation());
+            plugin.getTimerManager().resumeTimer(player);
+        }, 1L);
+    }
 }
