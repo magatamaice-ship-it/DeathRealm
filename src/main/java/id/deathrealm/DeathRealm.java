@@ -10,12 +10,15 @@ import org.bukkit.plugin.java.JavaPlugin;
 public class DeathRealm extends JavaPlugin {
 
     private World deathWorld;
+    private DeathTimerManager timerManager;
 
     @Override
     public void onEnable() {
         getLogger().info("DeathRealm is starting...");
 
         createDeathWorld();
+
+        timerManager = new DeathTimerManager(this);
         
         getServer().getPluginManager().registerEvents(
     new DeathRealmFlight(this), this
@@ -63,5 +66,8 @@ public class DeathRealm extends JavaPlugin {
 
     public World getDeathWorld() {
         return deathWorld;
+    }
+    public DeathTimerManager getTimerManager() {
+    return timerManager;
     }
 }
