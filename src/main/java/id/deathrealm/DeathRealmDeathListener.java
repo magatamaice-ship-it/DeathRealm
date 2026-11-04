@@ -6,6 +6,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
 
 public class DeathRealmDeathListener implements Listener {
 
@@ -36,4 +37,21 @@ public class DeathRealmDeathListener implements Listener {
             }
         });
     }
+@EventHandler
+public void onPlayerJoin(PlayerJoinEvent event) {
+    Player player = event.getPlayer();
+
+    if (!plugin.getTimerManager().hasTimer(player.getUniqueId())) {
+        return;
+    }
+
+    if (plugin.getTimerManager().getRemainingTime(player.getUniqueId()) <= 0) {
+        plugin.getTimerManager().removeTimer(player.getUniqueId());
+        player.teleport(org.bukkit.Bukkit.getWorlds().get(0).getSpawnLocation());
+        return;
+    }
+
+    player.teleport(plugin.getDeathWorld().getSpawnLocation());
+    plugin.getTimerManager().resumeTimer(player);
+}
 }
