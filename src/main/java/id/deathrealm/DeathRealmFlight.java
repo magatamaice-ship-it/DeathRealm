@@ -1,4 +1,3 @@
-
 package id.deathrealm;
 
 import org.bukkit.GameMode;
@@ -7,7 +6,6 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.event.player.PlayerQuitEvent;
 
 public class DeathRealmFlight implements Listener {
 
@@ -19,27 +17,30 @@ public class DeathRealmFlight implements Listener {
 
     @EventHandler
     public void onWorldChange(PlayerChangedWorldEvent event) {
-        Player player = event.getPlayer();
-
-        if (player.getWorld().equals(plugin.getDeathWorld())) {
-            enableFlight(player);
-        }
+        updateFlight(event.getPlayer());
     }
 
     @EventHandler
     public void onJoin(PlayerJoinEvent event) {
-        Player player = event.getPlayer();
-
-        if (player.getWorld().equals(plugin.getDeathWorld())) {
-            enableFlight(player);
-        }
+        updateFlight(event.getPlayer());
     }
 
-    private void enableFlight(Player player) {
-        if (player.getGameMode() != GameMode.CREATIVE
-                && player.getGameMode() != GameMode.SPECTATOR) {
+    private void updateFlight(Player player) {
+        boolean isDeadRealm =
+                player.getWorld().equals(plugin.getDeathWorld())
+                && plugin.getTimerManager().hasTimer(player.getUniqueId());
+
+        if (player.getGameMode() == GameMode.CREATIVE
+                || player.getGameMode() == GameMode.SPECTATOR) {
+            return;
+        }
+
+        if (isDeadRealm) {
             player.setAllowFlight(true);
             player.setFlying(true);
+        } else {
+            player.setFlying(false);
+            player.setAllowFlight(false);
         }
     }
 }
