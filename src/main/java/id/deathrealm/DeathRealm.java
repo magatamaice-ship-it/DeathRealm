@@ -2,78 +2,86 @@
 package id.deathrealm;
 
 import org.bukkit.Bukkit;
+import org.bukkit.GameRule;
+import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.WorldCreator;
-import org.bukkit.WorldType;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class DeathRealm extends JavaPlugin {
 
     private World deathWorld;
     private DeathTimerManager timerManager;
+    private DeathRealmAmbient ambient;
 
     @Override
     public void onEnable() {
-        getLogger().info("DeathRealm is starting...");
 
-        createDeathWorld();
+        getLogger().info("Starting DeathRealm...");
 
-        timerManager = new DeathTimerManager(this);
-        for (org.bukkit.entity.Player player : Bukkit.getOnlinePlayers()) {
-    timerManager.resumeTimer(player);
+        // Membuat dunia DeathRealm yang kosong.
+        WorldCreator creator = new WorldCreator("DeathRealm");
+        creator.generator(new VoidChunkGenerator());
+
+        deathWorld = Bukkit.createWorld(creator);
+
+        if (deathWorld == null) {
+            getLogger().severe("Gagal membuat dunia DeathRealm!");
+            getServer().getPluginManager().disablePlugin(this);
+            return;
         }
-        
+
+        // Pengaturan dunia.
+        deathWorld.setSpawnLocation(new Location(deathWorld, 0, 100, 0));
+        deathWorld.setGameRule(GameRule.DO_DAYLIGHT_CYCLE, false);
+        deathWorld.setGameRule(GameRule.DO_WEATHER_CYCLE, false);
+        deathWorld.setGameRule(GameRule.DO_MOB_SPAWNING, false);
+        deathWorld.setTime(18000);
+        deathWorld.setStorm(false);
+        deathWorld.setThundering(false);
+
+        // Sistem timer.
+        timerManager = new DeathTimerManager(this);
+
+        // Daftarkan listener.
         getServer().getPluginManager().registerEvents(
-    new DeathRealmFlight(this), this
-);
+                new DeathRealmDeathListener(this), this);
+
         getServer().getPluginManager().registerEvents(
-    new DeathRealmDeathListener(this), this
-);
+                new DeathRealmFlight(this), this);
+
         getServer().getPluginManager().registerEvents(
-    new DeathRealmProtection(this), this
-);
+                new DeathRealmProtection(this), this);
+
+        DeathRealmVisibility visibility = new DeathRealmVisibility(this);
+
+        getServer().getPluginManager().registerEvents(
+                visibility, this);
+
+        // Efek atmosfer DeathRealm.
+        ambient = new DeathRealmAmbient(this);
+        ambient.start();
+
+        // Perbarui visibilitas pemain setelah plugin aktif.
+        Bukkit.getScheduler().runTask(this, visibility::updateVisibility);
+
         getLogger().info("DeathRealm successfully enabled!");
     }
 
     @Override
     public void onDisable() {
-        getLogger().info("DeathRealm has been disabled.");
-    }
-
-    private void createDeathWorld() {
-        World existing = Bukkit.getWorld("DeathRealm");
-
-        if (existing != null) {
-            deathWorld = existing;
-            getLogger().info("DeathRealm world already exists.");
-            return;
+        if (ambient != null) {
+            ambient.cancel();
         }
 
-        WorldCreator creator = new WorldCreator("DeathRealm");
-        creator.type(WorldType.FLAT);
-        creator.generateStructures(false);
-
-        deathWorld = Bukkit.createWorld(creator);
-
-        if (deathWorld != null) {
-            deathWorld.setGameRule(
-                org.bukkit.GameRule.DO_DAYLIGHT_CYCLE,
-                false
-            );
-
-            deathWorld.setTime(18000);
-            deathWorld.setStorm(false);
-
-            getLogger().info("DeathRealm world created.");
-        } else {
-            getLogger().severe("Failed to create DeathRealm world!");
-        }
+        getLogger().info("DeathRealm disabled.");
     }
 
     public World getDeathWorld() {
         return deathWorld;
     }
+
     public DeathTimerManager getTimerManager() {
-    return timerManager;
+        return timerManager;
     }
 }
