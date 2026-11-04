@@ -19,7 +19,6 @@ public class DeathRealm extends JavaPlugin {
 
         getLogger().info("Starting DeathRealm...");
 
-        // Membuat dunia DeathRealm yang kosong.
         WorldCreator creator = new WorldCreator("DeathRealm");
         creator.generator(new VoidChunkGenerator());
 
@@ -31,7 +30,6 @@ public class DeathRealm extends JavaPlugin {
             return;
         }
 
-        // Pengaturan dunia.
         deathWorld.setSpawnLocation(new Location(deathWorld, 0, 100, 0));
         deathWorld.setGameRule(GameRule.DO_DAYLIGHT_CYCLE, false);
         deathWorld.setGameRule(GameRule.DO_WEATHER_CYCLE, false);
@@ -40,10 +38,8 @@ public class DeathRealm extends JavaPlugin {
         deathWorld.setStorm(false);
         deathWorld.setThundering(false);
 
-        // Sistem timer.
         timerManager = new DeathTimerManager(this);
 
-        // Daftarkan listener.
         getServer().getPluginManager().registerEvents(
                 new DeathRealmDeathListener(this), this);
 
@@ -53,16 +49,17 @@ public class DeathRealm extends JavaPlugin {
         getServer().getPluginManager().registerEvents(
                 new DeathRealmProtection(this), this);
 
+        getServer().getPluginManager().registerEvents(
+                new DeathRealmEnvironment(this), this);
+
         DeathRealmVisibility visibility = new DeathRealmVisibility(this);
 
         getServer().getPluginManager().registerEvents(
                 visibility, this);
 
-        // Efek atmosfer DeathRealm.
         ambient = new DeathRealmAmbient(this);
         ambient.start();
 
-        // Perbarui visibilitas pemain setelah plugin aktif.
         Bukkit.getScheduler().runTask(this, visibility::updateVisibility);
 
         getLogger().info("DeathRealm successfully enabled!");
