@@ -1,3 +1,4 @@
+
 package id.deathrealm;
 
 import org.bukkit.Bukkit;
@@ -18,17 +19,17 @@ public class DeathRealmVisibility implements Listener {
 
     @EventHandler
     public void onJoin(PlayerJoinEvent event) {
-        updateVisibility();
+        Bukkit.getScheduler().runTaskLater(plugin, this::updateVisibility, 2L);
     }
 
     @EventHandler
     public void onWorldChange(PlayerChangedWorldEvent event) {
-        updateVisibility();
+        Bukkit.getScheduler().runTask(plugin, this::updateVisibility);
     }
 
     @EventHandler
     public void onQuit(PlayerQuitEvent event) {
-        updateVisibility();
+        Bukkit.getScheduler().runTask(plugin, this::updateVisibility);
     }
 
     public void updateVisibility() {
