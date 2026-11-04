@@ -1,0 +1,7 @@
+
+name: DeathRealm
+version: 1.0.0
+main: id.deathrealm.DeathRealm
+api-version: '1.21'
+author: DeathRealm
+description: Void death dimension and resurrection system
