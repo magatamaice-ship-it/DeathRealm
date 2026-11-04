@@ -44,6 +44,7 @@ public class DeathTimerManager {
         data.set(uuid.toString(), endTime);
         save();
 
+        plugin.updateVisibility();
         startCountdown(player);
     }
 
@@ -144,6 +145,8 @@ public class DeathTimerManager {
         if (task != null) {
             task.cancel();
         }
+
+        plugin.updateVisibility();
     }
 
     private void save() {
