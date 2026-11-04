@@ -103,7 +103,27 @@ public class DeathTimerManager {
             task.cancel();
         }
     }
+public void resurrect(Player player) {
+    World mainWorld = Bukkit.getWorlds().get(0);
+    player.teleport(mainWorld.getSpawnLocation());
 
+    player.getWorld().spawnParticle(
+            org.bukkit.Particle.TOTEM_OF_UNDYING,
+            player.getLocation().add(0, 1, 0),
+            60,
+            0.5, 1.0, 0.5,
+            0.1
+    );
+
+    player.getWorld().playSound(
+            player.getLocation(),
+            org.bukkit.Sound.ITEM_TOTEM_USE,
+            1.0f,
+            1.0f
+    );
+
+    removeTimer(player.getUniqueId());
+}
     private void save() {
         try {
             data.save(file);
