@@ -29,6 +29,9 @@ public class DeathRealm extends JavaPlugin {
         getServer().getPluginManager().registerEvents(
     new DeathRealmDeathListener(this), this
 );
+        getServer().getPluginManager().registerEvents(
+    new DeathRealmProtection(this), this
+);
         getLogger().info("DeathRealm successfully enabled!");
     }
 
