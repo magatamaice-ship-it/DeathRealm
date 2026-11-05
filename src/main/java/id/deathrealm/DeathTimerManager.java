@@ -79,15 +79,23 @@ public class DeathTimerManager {
                 () -> {
                     if (!player.isOnline()) {
                         BukkitTask current = tasks.remove(uuid);
+
                         if (current != null) {
                             current.cancel();
                         }
+
+                        plugin.getBossBar().remove(player);
                         return;
                     }
 
-                    if (getRemainingTime(uuid) <= 0) {
+                    long remaining = getRemainingTime(uuid);
+
+                    if (remaining <= 0) {
                         resurrect(player);
+                        return;
                     }
+
+                    plugin.getBossBar().update(player, remaining);
                 },
                 20L,
                 20L
@@ -113,6 +121,7 @@ public class DeathTimerManager {
         }
 
         removeTimer(uuid);
+        plugin.getBossBar().remove(player);
 
         player.teleport(mainWorld.getSpawnLocation());
 
