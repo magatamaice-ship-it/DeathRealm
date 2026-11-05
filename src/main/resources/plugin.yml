@@ -1,7 +1,17 @@
-
 name: DeathRealm
 version: 1.0.0
 main: id.deathrealm.DeathRealm
 api-version: '1.21'
 author: DeathRealm
-description: Void death dimension and resurrection system
+description: Cosmic death and resurrection system
+
+commands:
+  lahirkankembali:
+    description: Melahirkan kembali pemain secara instan
+    usage: /lahirkankembali <nama_player>
+    permission: deathrealm.admin
+
+permissions:
+  deathrealm.admin:
+    description: Mengizinkan penggunaan perintah kelahiran kembali
+    default: op
