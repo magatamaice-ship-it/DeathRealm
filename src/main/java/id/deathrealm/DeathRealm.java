@@ -3,6 +3,7 @@ package id.deathrealm;
 import org.bukkit.Bukkit;
 import org.bukkit.GameRule;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.WorldCreator;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -29,6 +30,8 @@ public class DeathRealm extends JavaPlugin {
             getServer().getPluginManager().disablePlugin(this);
             return;
         }
+
+        createSpawnPlatform();
 
         deathWorld.setSpawnLocation(
                 new Location(deathWorld, 0, 100, 0)
@@ -70,6 +73,17 @@ public class DeathRealm extends JavaPlugin {
                 this, visibility::updateVisibility);
 
         getLogger().info("DeathRealm successfully enabled!");
+    }
+
+    private void createSpawnPlatform() {
+        for (int x = -20; x <= 20; x++) {
+            for (int z = -20; z <= 20; z++) {
+                deathWorld.getBlockAt(x, 99, z)
+                        .setType(Material.BLACK_STAINED_GLASS, false);
+            }
+        }
+
+        getLogger().info("DeathRealm spawn platform created!");
     }
 
     public void updateVisibility() {
