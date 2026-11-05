@@ -1,4 +1,3 @@
-
 package id.deathrealm;
 
 import org.bukkit.Bukkit;
@@ -25,17 +24,14 @@ public class DeathRealmDeathListener implements Listener {
     public void onPlayerDeath(PlayerDeathEvent event) {
         Player player = event.getEntity();
 
-        // Item dan XP tetap jatuh seperti kematian normal.
         event.setKeepInventory(false);
         event.setKeepLevel(false);
 
-        // Mulai timer 60 menit.
         plugin.getTimerManager().startTimer(player);
 
-        // Efek jiwa saat pemain mati.
         Location location = player.getLocation().clone();
 
-        player.getWorld().playSound(
+        location.getWorld().playSound(
                 location,
                 Sound.ENTITY_ALLAY_DEATH,
                 1.0f,
@@ -69,14 +65,30 @@ public class DeathRealmDeathListener implements Listener {
     public void onPlayerRespawn(PlayerRespawnEvent event) {
         Player player = event.getPlayer();
 
-        event.setRespawnLocation(plugin.getDeathWorld().getSpawnLocation());
+        if (!plugin.getTimerManager().hasTimer(player.getUniqueId())) {
+            return;
+        }
+
+        event.setRespawnLocation(
+                plugin.getDeathWorld().getSpawnLocation()
+        );
 
         Bukkit.getScheduler().runTaskLater(plugin, () -> {
-            if (player.isOnline()
-                    && plugin.getTimerManager().hasTimer(player.getUniqueId())) {
-                player.teleport(plugin.getDeathWorld().getSpawnLocation());
-                plugin.getTimerManager().resumeTimer(player);
+            if (!player.isOnline()) {
+                return;
             }
+
+            if (plugin.getTimerManager().getRemainingTime(
+                    player.getUniqueId()) <= 0) {
+                plugin.getTimerManager().resurrect(player);
+                return;
+            }
+
+            player.teleport(
+                    plugin.getDeathWorld().getSpawnLocation()
+            );
+
+            plugin.getTimerManager().resumeTimer(player);
         }, 1L);
     }
 
@@ -99,7 +111,10 @@ public class DeathRealmDeathListener implements Listener {
                 return;
             }
 
-            player.teleport(plugin.getDeathWorld().getSpawnLocation());
+            player.teleport(
+                    plugin.getDeathWorld().getSpawnLocation()
+            );
+
             plugin.getTimerManager().resumeTimer(player);
         }, 1L);
     }
