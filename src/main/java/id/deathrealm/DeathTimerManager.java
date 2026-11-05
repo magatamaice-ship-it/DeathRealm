@@ -1,6 +1,7 @@
 package id.deathrealm;
 
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.World;
@@ -111,30 +112,57 @@ public class DeathTimerManager {
             return;
         }
 
-        World mainWorld = Bukkit.getWorld("world");
+        Location destination = player.getRespawnLocation();
 
-        if (mainWorld == null) {
-            plugin.getLogger().severe(
-                    "Dunia utama 'world' tidak ditemukan!"
-            );
-            return;
+        if (destination == null
+                || destination.getWorld() == null
+                || destination.getWorld().equals(plugin.getDeathWorld())) {
+
+            World mainWorld = Bukkit.getWorld("world");
+
+            if (mainWorld == null) {
+                plugin.getLogger().severe(
+                        "Dunia utama 'world' tidak ditemukan!"
+                );
+                return;
+            }
+
+            destination = mainWorld.getSpawnLocation();
         }
 
+        Location oldLocation = player.getLocation().clone();
+
+        oldLocation.getWorld().spawnParticle(
+                Particle.SOUL,
+                oldLocation.clone().add(0, 1, 0),
+                40,
+                0.5, 0.8, 0.5,
+                0.05
+        );
+
+        oldLocation.getWorld().playSound(
+                oldLocation,
+                Sound.ENTITY_ALLAY_DEATH,
+                1.0f,
+                1.2f
+        );
+
         removeTimer(uuid);
-        plugin.getBossBar().remove(player);
 
-        player.teleport(mainWorld.getSpawnLocation());
+        player.teleport(destination);
 
-        player.getWorld().spawnParticle(
+        Location newLocation = player.getLocation();
+
+        newLocation.getWorld().spawnParticle(
                 Particle.TOTEM_OF_UNDYING,
-                player.getLocation().clone().add(0, 1, 0),
+                newLocation.clone().add(0, 1, 0),
                 60,
                 0.5, 1.0, 0.5,
                 0.1
         );
 
-        player.getWorld().playSound(
-                player.getLocation(),
+        newLocation.getWorld().playSound(
+                newLocation,
                 Sound.ITEM_TOTEM_USE,
                 1.0f,
                 1.0f
@@ -149,6 +177,12 @@ public class DeathTimerManager {
 
         if (task != null) {
             task.cancel();
+        }
+
+        Player player = Bukkit.getPlayer(uuid);
+
+        if (player != null) {
+            plugin.getBossBar().remove(player);
         }
 
         plugin.updateVisibility();
